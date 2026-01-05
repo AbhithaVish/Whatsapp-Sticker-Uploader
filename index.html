@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Sticker Importer</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #f0f2f5; }
+        .card { background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; }
+        .btn { background-color: #25D366; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        #status { margin-top: 15px; color: #555; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Sticker Importer</h2>
+    <p>Select your <b>.wastickers</b> file to share to WhatsApp</p>
+    
+    <input type="file" id="stickerInput" accept=".wastickers" style="display: none;">
+    <button class="btn" onclick="document.getElementById('stickerInput').click()">Choose File</button>
+    
+    <div id="fileInfo"></div>
+    <button id="shareBtn" class="btn" style="display: none; background-color: #128C7E;">Send to WhatsApp</button>
+    
+    <p id="status"></p>
+</div>
+
+<script>
+    const input = document.getElementById('stickerInput');
+    const shareBtn = document.getElementById('shareBtn');
+    const status = document.getElementById('status');
+
+    input.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            document.getElementById('fileInfo').innerText = `Selected: ${file.name}`;
+            shareBtn.style.display = 'inline-block';
+        }
+    });
+
+    shareBtn.addEventListener('click', async () => {
+        const file = input.files[0];
+        
+        if (!navigator.share) {
+            status.innerText = "Your browser doesn't support direct sharing. Please manually open the file in WhatsApp.";
+            return;
+        }
+
+        try {
+            await navigator.share({
+                files: [file],
+                title: 'New Sticker Pack',
+                text: 'Check out these stickers!',
+            });
+            status.innerText = "Opening share menu...";
+        } catch (err) {
+            status.innerText = "Error: " + err.message;
+        }
+    });
+</script>
+
+</body>
+</html>
