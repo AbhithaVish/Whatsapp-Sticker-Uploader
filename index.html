@@ -3,62 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhatsApp Sticker Importer</title>
+    <title>StickerPorter | WhatsApp Import</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #f0f2f5; }
-        .card { background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; }
-        .btn { background-color: #25D366; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-        #status { margin-top: 15px; color: #555; }
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .wa-green { background-color: #25D366; }
+        .wa-dark { background-color: #075E54; }
     </style>
 </head>
-<body>
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
 
-<div class="card">
-    <h2>Sticker Importer</h2>
-    <p>Select your <b>.wastickers</b> file to share to WhatsApp</p>
-    
-    <input type="file" id="stickerInput" accept=".wastickers" style="display: none;">
-    <button class="btn" onclick="document.getElementById('stickerInput').click()">Choose File</button>
-    
-    <div id="fileInfo"></div>
-    <button id="shareBtn" class="btn" style="display: none; background-color: #128C7E;">Send to WhatsApp</button>
-    
-    <p id="status"></p>
-</div>
+    <div class="max-w-md w-full glass rounded-3xl shadow-2xl overflow-hidden border border-white">
+        <div class="wa-dark p-6 text-white text-center">
+            <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+                <i class="fa-solid fa-sticker-dot text-3xl text-emerald-600"></i>
+            </div>
+            <h1 class="text-xl font-bold italic">StickerPorter</h1>
+            <p class="text-xs opacity-80">Import .wastickers to WhatsApp</p>
+        </div>
 
-<script>
-    const input = document.getElementById('stickerInput');
-    const shareBtn = document.getElementById('shareBtn');
-    const status = document.getElementById('status');
+        <div class="p-8">
+            <div id="dropZone" class="border-2 border-dashed border-slate-300 rounded-2xl p-8 text-center transition-all hover:border-emerald-500 cursor-pointer">
+                <input type="file" id="stickerInput" accept=".wastickers" class="hidden">
+                <i class="fa-solid fa-cloud-arrow-up text-4xl text-slate-400 mb-3"></i>
+                <p class="text-slate-600 font-medium">Tap to upload file</p>
+                <p class="text-xs text-slate-400 mt-1">Supports .wastickers files</p>
+            </div>
 
-    input.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            document.getElementById('fileInfo').innerText = `Selected: ${file.name}`;
-            shareBtn.style.display = 'inline-block';
+            <div id="filePreview" class="hidden mt-6 p-4 bg-emerald-50 rounded-xl border border-emerald-100 items-center">
+                <div class="bg-emerald-500 text-white p-2 rounded-lg mr-3">
+                    <i class="fa-solid fa-file-zipper"></i>
+                </div>
+                <div class="flex-1 overflow-hidden">
+                    <p id="fileName" class="text-sm font-semibold text-slate-700 truncate">pack.wastickers</p>
+                    <p id="fileSize" class="text-xs text-slate-500">0.0 KB</p>
+                </div>
+                <button onclick="resetInput()" class="text-slate-400 hover:text-red-500">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <button id="importBtn" disabled class="w-full mt-8 py-4 rounded-xl bg-slate-300 text-white font-bold transition-all flex items-center justify-center gap-2 cursor-not-allowed">
+                <span>Import to WhatsApp</span>
+                <i class="fa-brands fa-whatsapp text-xl"></i>
+            </button>
+
+            <div class="mt-8 pt-6 border-t border-slate-100">
+                <h3 class="text-sm font-bold text-slate-700 mb-3">How it works:</h3>
+                <ul class="text-xs text-slate-500 space-y-2">
+                    <li class="flex gap-2 italic"><span class="font-bold text-emerald-600">1.</span> Upload your custom sticker pack file.</li>
+                    <li class="flex gap-2 italic"><span class="font-bold text-emerald-600">2.</span> Click "Import" to trigger the system share menu.</li>
+                    <li class="flex gap-2 italic"><span class="font-bold text-emerald-600">3.</span> Select **WhatsApp** from the list of apps.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const input = document.getElementById('stickerInput');
+        const preview = document.getElementById('filePreview');
+        const importBtn = document.getElementById('importBtn');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+
+        // Trigger file input
+        dropZone.onclick = () => input.click();
+
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        };
+
+        function handleFile(file) {
+            fileName.innerText = file.name;
+            fileSize.innerText = (file.size / 1024).toFixed(1) + " KB";
+            
+            // UI Switch
+            dropZone.classList.add('hidden');
+            preview.classList.remove('hidden');
+            preview.classList.add('flex');
+            
+            // Enable Button
+            importBtn.disabled = false;
+            importBtn.classList.remove('bg-slate-300', 'cursor-not-allowed');
+            importBtn.classList.add('wa-green', 'hover:bg-emerald-600', 'shadow-lg');
         }
-    });
 
-    shareBtn.addEventListener('click', async () => {
-        const file = input.files[0];
-        
-        if (!navigator.share) {
-            status.innerText = "Your browser doesn't support direct sharing. Please manually open the file in WhatsApp.";
-            return;
+        function resetInput() {
+            input.value = "";
+            dropZone.classList.remove('hidden');
+            preview.classList.add('hidden');
+            preview.classList.remove('flex');
+            importBtn.disabled = true;
+            importBtn.classList.add('bg-slate-300', 'cursor-not-allowed');
+            importBtn.classList.remove('wa-green', 'hover:bg-emerald-600', 'shadow-lg');
         }
 
-        try {
-            await navigator.share({
-                files: [file],
-                title: 'New Sticker Pack',
-                text: 'Check out these stickers!',
-            });
-            status.innerText = "Opening share menu...";
-        } catch (err) {
-            status.innerText = "Error: " + err.message;
-        }
-    });
-</script>
+        importBtn.onclick = async () => {
+            const file = input.files[0];
+            if (!file) return;
 
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        files: [file],
+                        title: 'Sticker Pack Import',
+                        text: 'Importing my custom stickers!',
+                    });
+                } catch (err) {
+                    console.error("Share failed:", err);
+                }
+            } else {
+                alert("Please use a mobile browser (Chrome/Safari) to use the direct import feature.");
+            }
+        };
+    </script>
 </body>
 </html>
